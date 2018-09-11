@@ -1,3 +1,4 @@
+#include "shader_s.hpp"
 #include <iostream>
 #include <cmath>
 #include <glad/glad.h>
@@ -5,8 +6,6 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
-void checkShaderError(GLuint shader);
-void checkProgramError(GLuint program);
 
 float first_triangle[] = {
     -0.5,   -0.5,   0.0,    1.0f,   0.0f,   0.0f,
@@ -49,45 +48,7 @@ int main(int arg, char** argc) {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (GLvoid*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    const GLchar* vertexShaderSource = 
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;"
-    "layout (location = 1) in vec3 aColor;"
-    "out vec3 vertexColor;"
-    "void main() {"
-    "    gl_Position = vec4(aPos, 1.0);"
-    "    vertexColor = aColor;"
-    "}";
-
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-    glCompileShader(vertexShader);
-    checkShaderError(vertexShader);
-
-    const GLchar* fragmentShaderSource = 
-    "#version 330 core\n"
-    "in vec3 vertexColor;"
-    "out vec4 FragColor;"
-    "void main() {"
-    "    FragColor = vec4(vertexColor, 1.0f);"
-    "}";
-
-    // Orange
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-    glCompileShader(fragmentShader);
-    checkShaderError(fragmentShader);
-
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    Shader Shader("../vertex_shader.vs", "../fragment_shader.fs");
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -97,12 +58,7 @@ int main(int arg, char** argc) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
-
-        float timeValue = glfwGetTime();
-        float greenValue = sin(timeValue) / 2.0f + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+        Shader.use();
 
         glBindVertexArray(VAO[0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
