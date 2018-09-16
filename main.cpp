@@ -4,13 +4,22 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
 float first_triangle[] = {
-    -0.5,   -0.5,   0.0,    1.0f,   0.0f,   0.0f,
-     0.5,   -0.5,   0.0,    0.0f,   1.0f,   0.0f,
-     0.0,    0.5,   0.0,    0.0f,   0.0f,   1.0f,
+    //positions             //colors                //texture coords
+     0.5,    0.5,   0.0,    1.0f,   0.0f,   0.0f,   1.0f,   1.0f,   //top right
+     0.5,   -0.5,   0.0,    0.0f,   1.0f,   0.0f,   1.0f,   0.0f,   //bottom right
+    -0.5,   -0.5,   0.0,    0.0f,   0.0f,   1.0f,   0.0f,   0.0f,   //bottom left
+    -0.5,    0.5,   0.0,    1.0f,   1.0f,   1.0f,   0.0f,   1.0f,   //top left
+};
+unsigned int indices[] = {
+    0,  1,  3,
+    2,  3,  1,
 };
 
 int main(int arg, char** argc) {
@@ -35,18 +44,41 @@ int main(int arg, char** argc) {
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("../container.jpg", &width, &height, &nrChannels, 0);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+
     unsigned int VAO[2];
     glGenVertexArrays(2, VAO);
     unsigned int VBO[2];
     glGenBuffers(2, VBO);
+    unsigned int EBO[2];
+    glGenBuffers(2, EBO);
 
     glBindVertexArray(VAO[0]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(first_triangle), first_triangle, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (GLvoid*)0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8* sizeof(float), (GLvoid*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (GLvoid*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (GLvoid*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (GLvoid*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     Shader Shader("../vertex_shader.vs", "../fragment_shader.fs");
 
@@ -60,8 +92,9 @@ int main(int arg, char** argc) {
 
         Shader.use();
 
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO[0]);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
