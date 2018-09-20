@@ -9,13 +9,14 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+float mixvalue = 0.5f;
 
 float first_triangle[] = {
     //positions             //colors                //texture coords
-     0.5,    0.5,   0.0,    1.0f,   0.0f,   0.0f,   2.0f,   2.0f,   //top right
-     0.5,   -0.5,   0.0,    0.0f,   1.0f,   0.0f,   2.0f,   0.0f,   //bottom right
+     0.5,    0.5,   0.0,    1.0f,   0.0f,   0.0f,   1.0f,   1.0f,   //top right
+     0.5,   -0.5,   0.0,    0.0f,   1.0f,   0.0f,   1.0f,   0.0f,   //bottom right
     -0.5,   -0.5,   0.0,    0.0f,   0.0f,   1.0f,   0.0f,   0.0f,   //bottom left
-    -0.5,    0.5,   0.0,    1.0f,   1.0f,   1.0f,   0.0f,   2.0f,   //top left
+    -0.5,    0.5,   0.0,    1.0f,   1.0f,   1.0f,   0.0f,   1.0f,   //top left
 };
 unsigned int indices[] = {
     0,  1,  3,
@@ -48,8 +49,8 @@ int main(int arg, char** argc) {
     glGenTextures(2, texture);
     // Texture 1
     glBindTexture(GL_TEXTURE_2D, texture[0]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     int width, height, nrChannels;
@@ -116,6 +117,7 @@ int main(int arg, char** argc) {
 
         //glBindTexture(GL_TEXTURE_2D, texture[0]);
         Shader.use();
+        Shader.setFloat("mix_retio", mixvalue);
         glBindVertexArray(VAO[0]);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -134,6 +136,18 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        mixvalue += 0.01f;
+        if (mixvalue > 1.0f) {
+            mixvalue = 1.0f;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        mixvalue -= 0.01f;
+        if (mixvalue < 0.0f) {
+            mixvalue = 0.0f;
+        }
     }
 }
 
