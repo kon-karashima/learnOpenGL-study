@@ -107,8 +107,21 @@ int main(int arg, char** argc) {
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    glm::mat4 trans = glm::mat4(1.0f);
-    unsigned int transformLoc = glGetUniformLocation(Shader.ID, "transform");
+    // model
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    unsigned int modelLoc = glGetUniformLocation(Shader.ID, "model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    // view
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    unsigned int viewLoc = glGetUniformLocation(Shader.ID, "view");
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    // projection
+    glm::mat4 projection = glm::mat4(1.0f);
+    projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.1f, 100.0f);
+    unsigned int perspectiveLoc = glGetUniformLocation(Shader.ID, "projection");
+    glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
@@ -121,22 +134,12 @@ int main(int arg, char** argc) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture[1]);
 
-        glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-
         //glBindTexture(GL_TEXTURE_2D, texture[0]);
         Shader.use();
         Shader.setFloat("mix_retio", mixvalue);
         glBindVertexArray(VAO[0]);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        glm::mat4 trans2 = glm::mat4(1.0f);
-        trans2 = glm::translate(trans2, glm::vec3(-0.5f, 0.5f, 0.0f));
-        float scale_ratio = std::sin((float)glfwGetTime());
-        trans2 = glm::scale(trans2, glm::vec3(scale_ratio, scale_ratio, scale_ratio));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans2));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
