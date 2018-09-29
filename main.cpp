@@ -16,6 +16,8 @@ void processInput(GLFWwindow *window);
 float mixvalue = 0.5f;
 float fov = 45.0f;
 float aspect_ratio = 800.0f/600.0f;
+float camera_x = 0.0f;
+float camera_z = -3.0f;
 
 float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -166,7 +168,7 @@ int main(int arg, char** argc) {
 
         // view
         glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        view = glm::translate(view, glm::vec3(camera_x, 0.0f, camera_z));
         unsigned int viewLoc = glGetUniformLocation(Shader.ID, "view");
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         // projection
@@ -230,6 +232,18 @@ void processInput(GLFWwindow *window) {
         aspect_ratio = 800.0f/600.0f;
         fov = 45.0f;
         mixvalue = 0.5f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        camera_z += 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        camera_z -= 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        camera_x -= 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        camera_x += 0.1f;
     }
 }
 
