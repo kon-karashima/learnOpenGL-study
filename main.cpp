@@ -12,7 +12,10 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+
 float mixvalue = 0.5f;
+float fov = 45.0f;
+float aspect_ratio = 800.0f/600.0f;
 
 float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -168,7 +171,7 @@ int main(int arg, char** argc) {
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         // projection
         glm::mat4 projection = glm::mat4(1.0f);
-        projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(fov), aspect_ratio, 0.1f, 100.0f);
         unsigned int perspectiveLoc = glGetUniformLocation(Shader.ID, "projection");
         glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
@@ -208,12 +211,25 @@ void processInput(GLFWwindow *window) {
         if (mixvalue > 1.0f) {
             mixvalue = 1.0f;
         }
+        fov -= 0.1f;
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         mixvalue -= 0.01f;
         if (mixvalue < 0.0f) {
             mixvalue = 0.0f;
         }
+        fov += 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        aspect_ratio += 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        aspect_ratio -= 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        aspect_ratio = 800.0f/600.0f;
+        fov = 45.0f;
+        mixvalue = 0.5f;
     }
 }
 
