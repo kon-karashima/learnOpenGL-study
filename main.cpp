@@ -185,7 +185,8 @@ int main(int arg, char** argc) {
             // model
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
+            float angle = i * 20.0f;
+            if (i % 3 == 0) angle += glfwGetTime() * 25.0f;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
             unsigned int modelLoc = glGetUniformLocation(Shader.ID, "model");
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
