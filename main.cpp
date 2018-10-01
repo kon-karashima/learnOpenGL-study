@@ -16,8 +16,12 @@ void processInput(GLFWwindow *window);
 float mixvalue = 0.5f;
 float fov = 45.0f;
 float aspect_ratio = 800.0f/600.0f;
-float camera_x = 0.0f;
-float camera_z = -3.0f;
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -156,6 +160,10 @@ int main(int arg, char** argc) {
 
 
     while (!glfwWindowShouldClose(window)) {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         processInput(window);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -168,7 +176,7 @@ int main(int arg, char** argc) {
 
         // view
         glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(camera_x, 0.0f, camera_z));
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         unsigned int viewLoc = glGetUniformLocation(Shader.ID, "view");
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         // projection
@@ -185,8 +193,7 @@ int main(int arg, char** argc) {
             // model
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
-            float angle = i * 20.0f;
-            if (i % 3 == 0) angle += glfwGetTime() * 25.0f;
+            float angle = glfwGetTime() * 20.0f + i * 8;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
             unsigned int modelLoc = glGetUniformLocation(Shader.ID, "model");
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -223,6 +230,8 @@ void processInput(GLFWwindow *window) {
         }
         fov += 0.1f;
     }
+    
+    float cameraSpeed = deltaTime * 2.5f;
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
         aspect_ratio += 0.1f;
     }
@@ -235,16 +244,16 @@ void processInput(GLFWwindow *window) {
         mixvalue = 0.5f;
     }
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        camera_z += 0.1f;
+        cameraPos += cameraSpeed * cameraFront;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        camera_z -= 0.1f;
+        cameraPos -= cameraSpeed * cameraFront;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        camera_x -= 0.1f;
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        camera_x += 0.1f;
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     }
 }
 
