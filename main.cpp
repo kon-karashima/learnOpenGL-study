@@ -20,7 +20,7 @@ float aspect_ratio = 800.0f/600.0f;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 float lastX = 400, lastY = 300;
-float yaw = 0.0f;
+float yaw = -90.0f;
 float pitch = 0.0f;
 static bool firstMouse = true;
 
