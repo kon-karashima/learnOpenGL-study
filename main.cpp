@@ -180,26 +180,22 @@ int main(int arg, char** argc) {
 
         // view
         glm::mat4 view = Camera.GetViewMatrix();
-        unsigned int viewLoc = glGetUniformLocation(Shader.ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        Shader.setMatrix4fv("view", view);
         // projection
-        glm::mat4 projection = glm::mat4(1.0f);
-        projection = glm::perspective(glm::radians(Camera.Zoom), aspect_ratio, 0.1f, 100.0f);
-        unsigned int perspectiveLoc = glGetUniformLocation(Shader.ID, "projection");
-        glUniformMatrix4fv(perspectiveLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        glm::mat4 projection = glm::perspective(glm::radians(Camera.Zoom), aspect_ratio, 0.1f, 100.0f);
+        Shader.setMatrix4fv("projection", projection);
 
         Shader.use();
         Shader.setFloat("mix_retio", mixvalue);
+
         glBindVertexArray(VAO[0]);
 
         for (auto i=0; i<10; i++) {
             // model
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
             float angle = glfwGetTime() * 20.0f + i * 8;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
-            unsigned int modelLoc = glGetUniformLocation(Shader.ID, "model");
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            Shader.setMatrix4fv("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
