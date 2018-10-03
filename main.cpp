@@ -12,6 +12,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 float mixvalue = 0.5f;
@@ -107,6 +108,7 @@ int main(int arg, char** argc) {
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     unsigned int texture[2];
     glGenTextures(2, texture);
@@ -227,17 +229,18 @@ void processInput(GLFWwindow *window) {
         if (mixvalue > 1.0f) {
             mixvalue = 1.0f;
         }
-        fov -= 0.1f;
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         mixvalue -= 0.01f;
         if (mixvalue < 0.0f) {
             mixvalue = 0.0f;
         }
-        fov += 0.1f;
     }
     
     float cameraSpeed = deltaTime * 2.5f;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        cameraSpeed *= 2.0f;
+    }
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
         aspect_ratio += 0.1f;
     }
@@ -288,6 +291,12 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     front.y = sin(glm::radians(pitch));
     front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
     cameraFront = glm::normalize(front);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    if (fov >= 1.0f && fov <= 45.0f) fov -= yoffset;
+    if (fov <= 1.0f) fov = 1.0f;
+    if (fov >= 45.0f) fov =45.0f;
 }
 
 void checkShaderError(GLuint shader) {
