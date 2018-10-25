@@ -146,6 +146,7 @@ int main(int arg, char** argc) {
         cubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
         cubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
         cubeShader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
+        cubeShader.setVec3("viewPos", Camera.Position.x, Camera.Position.y, Camera.Position.z);
 
         // view
         glm::mat4 view = Camera.GetViewMatrix();
