@@ -21,6 +21,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 float lastX = 400, lastY = 300;
 static bool firstMouse = true;
+static int shininess = 32;
 
 Camera Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
@@ -148,6 +149,7 @@ int main(int arg, char** argc) {
 
         // object cube shader
         cubeShader.use();
+        cubeShader.setInt("shininess", shininess);
         cubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
         cubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
         cubeShader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
@@ -204,10 +206,12 @@ void processInput(GLFWwindow *window) {
         cameraSpeed *= 2.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        aspect_ratio += 0.1f;
+        //aspect_ratio += 0.1f;
+        if (shininess < 128) shininess++;
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        aspect_ratio -= 0.1f;
+        //aspect_ratio -= 0.1f;
+        if (shininess > 1) shininess--;
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
         aspect_ratio = 800.0f/600.0f;
