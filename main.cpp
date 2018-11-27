@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -26,6 +27,20 @@ static int shininess = 32;
 Camera Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
 glm::vec3 lightPos(1.2f, 0.5f, 2.0f);
+
+struct Material {
+    Material(glm::vec3 a, glm::vec3 d, glm::vec3 s, float shininess)
+        : ambient(a), diffuse(d), specular(s), shininess(shininess) {}
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    float shininess;
+};
+
+std::vector<Material> material;
+auto itr = material.begin();
+
+bool upable = true;
 
 float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -129,6 +144,30 @@ int main(int arg, char** argc) {
     glEnable(GL_DEPTH_TEST);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    // materials
+    Material emerald = Material(
+            glm::vec3(0.0215f, 0.1745f, 0.0215f),
+            glm::vec3(0.07568f, 0.61424f, 0.07568f),
+            glm::vec3(0.633f, 0.727811f, 0.633f),
+            0.6f * 128
+            );
+    Material cyan_plastic = Material(
+            glm::vec3(0.0f, 0.1f, 0.06f),
+            glm::vec3(0.0f, 0.5098f, 0.5098f),
+            glm::vec3(0.5019f, 0.5019f, 0.5019f),
+            0.25f * 128
+            );
+    Material gold = Material(
+            glm::vec3(0.2472f, 0.1995f, 0.0745f),
+            glm::vec3(0.7516f, 0.6064f, 0.2264f),
+            glm::vec3(0.6282f, 0.5558f, 0.3660f),
+            0.4f * 128
+            );
+    material.push_back(emerald);
+    material.push_back(cyan_plastic);
+    material.push_back(gold);
+    itr = material.begin();
+
     while (!glfwWindowShouldClose(window)) {
         // time logic
         float currentFrame = glfwGetTime();
@@ -149,12 +188,15 @@ int main(int arg, char** argc) {
 
         // object cube shader
         cubeShader.use();
-        cubeShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-        cubeShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-        cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-        cubeShader.setFloat("material.shininess", 32.0f);
-        cubeShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-        cubeShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+        //cubeShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+        //cubeShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+        //cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        cubeShader.setVec3("material.ambient", (*itr).ambient);
+        cubeShader.setVec3("material.diffuse", (*itr).diffuse);
+        cubeShader.setVec3("material.specular", (*itr).specular);
+        cubeShader.setFloat("material.shininess", (*itr).shininess);
+        cubeShader.setVec3("light.ambient", 1.0f, 1.0f, 1.0f);
+        cubeShader.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
         cubeShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
         cubeShader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
         cubeShader.setVec3("viewPos", Camera.Position.x, Camera.Position.y, Camera.Position.z);
@@ -210,12 +252,16 @@ void processInput(GLFWwindow *window) {
         cameraSpeed *= 2.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        //aspect_ratio += 0.1f;
-        if (shininess < 128) shininess++;
+        if (upable) {
+            std::advance(itr, 1);
+            if (itr == material.end()) itr = material.begin();
+        }
+        upable = false;
     }
+    if (glfwGetKey(window, GLFW_KEY_UP) != GLFW_PRESS) upable = true;
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        //aspect_ratio -= 0.1f;
-        if (shininess > 1) shininess--;
+        std::advance(itr, -1);
+        if (itr == (material.begin()-1)) itr = material.end()-1;
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
         aspect_ratio = 800.0f/600.0f;
