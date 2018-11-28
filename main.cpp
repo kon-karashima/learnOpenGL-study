@@ -174,6 +174,7 @@ int main(int arg, char** argc) {
     // Texture
     unsigned int diffuseMap;
     glGenTextures(1, &diffuseMap);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, diffuseMap);
     // set the texture wrapping/filtering options (on the currently bound texture object)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
@@ -193,6 +194,32 @@ int main(int arg, char** argc) {
         std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
+
+    unsigned int specularMap;
+    glGenTextures(1, &specularMap);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, specularMap);
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load and generate the texture
+    data = stbi_load("../container2_specular.png", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+
+    cubeShader.use();
+    cubeShader.setInt("material.diffuse", 0);
+    cubeShader.setInt("material.specular", 1);
 
     while (!glfwWindowShouldClose(window)) {
         // time logic
@@ -214,18 +241,18 @@ int main(int arg, char** argc) {
 
         // object cube shader
         cubeShader.use();
+        cubeShader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
+        cubeShader.setVec3("viewPos", Camera.Position.x, Camera.Position.y, Camera.Position.z);
         //cubeShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
         //cubeShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
         //cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         //cubeShader.setVec3("material.ambient", (*itr).ambient);
         //cubeShader.setVec3("material.diffuse", (*itr).diffuse);
-        cubeShader.setVec3("material.specular", (*itr).specular);
-        cubeShader.setFloat("material.shininess", (*itr).shininess);
+        //cubeShader.setVec3("material.specular", (*itr).specular);
         cubeShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
         cubeShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
         cubeShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-        cubeShader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
-        cubeShader.setVec3("viewPos", Camera.Position.x, Camera.Position.y, Camera.Position.z);
+        cubeShader.setFloat("material.shininess", 64.0f);
 
         // view
         glm::mat4 view = Camera.GetViewMatrix();
@@ -241,18 +268,20 @@ int main(int arg, char** argc) {
         glBindVertexArray(cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        // bind maps
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+
         // draw the light cube
         lampShader.use();
-        lampShader.setInt("material.diffuse", 0);
         lampShader.setMatrix4fv("view", view);
         lampShader.setMatrix4fv("projection", projection);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
         lampShader.setMatrix4fv("model", model);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
-        
         glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
