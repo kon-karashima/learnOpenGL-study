@@ -24,6 +24,8 @@ float lastFrame = 0.0f;
 float lastX = 400, lastY = 300;
 static bool firstMouse = true;
 static int shininess = 32;
+bool lightMove = true;
+float lightScale = 1.5f;
 
 Camera Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
@@ -175,9 +177,11 @@ int main(int arg, char** argc) {
     // Texture
     unsigned int diffuseMap = loadTexture("../container2.png");
     unsigned int specularMap = loadTexture("../container2_specular.png");
+    unsigned int emissionMap = loadTexture("../matrix.jpg");
     cubeShader.use();
     cubeShader.setInt("material.diffuse", 0);
     cubeShader.setInt("material.specular", 1);
+    cubeShader.setInt("material.emission", 2);
 
     while (!glfwWindowShouldClose(window)) {
         // time logic
@@ -193,14 +197,16 @@ int main(int arg, char** argc) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // change lightPos
-        float lightScale = 1.5f;
-        lightPos.x = sin(glfwGetTime()) * lightScale;
-        lightPos.z = cos(glfwGetTime()) * lightScale;
+        if (lightMove) {
+            lightPos.x = sin(glfwGetTime()) * lightScale;
+            lightPos.z = cos(glfwGetTime()) * lightScale;
+        }
 
         // object cube shader
         cubeShader.use();
-        cubeShader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
-        cubeShader.setVec3("viewPos", Camera.Position.x, Camera.Position.y, Camera.Position.z);
+        cubeShader.setVec3("light.position", lightPos);
+        cubeShader.setVec3("light.direction", -lightPos);
+        cubeShader.setVec3("viewPos", Camera.Position);
         //cubeShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
         //cubeShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
         //cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
@@ -211,6 +217,10 @@ int main(int arg, char** argc) {
         cubeShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
         cubeShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
         cubeShader.setFloat("material.shininess", 64.0f);
+        cubeShader.setFloat("material.glow", 0.5f + sin(glfwGetTime())/2.0f);
+        cubeShader.setFloat("light.constant", 1.0f);
+        cubeShader.setFloat("light.linear", 0.09f);
+        cubeShader.setFloat("light.quadratic", 0.032f);
 
         // view
         glm::mat4 view = Camera.GetViewMatrix();
@@ -231,6 +241,8 @@ int main(int arg, char** argc) {
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, emissionMap);
 
         // draw the light cube
         lampShader.use();
@@ -295,6 +307,11 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
         Camera.ProcessKeyboard(Camera_Movement::LEFT, deltaTime);
     }
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            lightScale += 0.01f;
+        }
+    } 
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
